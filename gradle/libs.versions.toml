@@ -1,0 +1,28 @@
+[versions]
+
+shadow = "8.3.5"
+
+# Commons cli
+commons-cli = "1.9.0"
+
+# JSON
+json = "20240303"
+
+# Logging
+slf4j = "2.0.13"
+
+[libraries]
+
+# Commons cli
+commons-cli = { group = "commons-cli", name = "commons-cli", version.ref = "commons-cli" }
+
+# JSON
+json = { group = "org.json", name = "json", version.ref = "json" }
+
+# Logging
+slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
+slf4j-simple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
+
+[plugins]
+
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
