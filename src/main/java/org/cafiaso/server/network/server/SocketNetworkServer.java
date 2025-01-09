@@ -50,26 +50,26 @@ public class SocketNetworkServer extends AbstractNetworkServer {
         serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.bind(new InetSocketAddress(host, port));
 
-        Thread.startVirtualThread(() -> {
-            while (serverSocketChannel.isOpen()) {
-                try {
-                    SocketChannel clientSocketChannel = serverSocketChannel.accept();
-                    closeConnectionIfExist(clientSocketChannel.socket().getInetAddress());
+        LOGGER.info("Socket server bound to {}:{}", host, port);
 
-                    // Set socket options
-                    Socket clientSocket = clientSocketChannel.socket();
-                    clientSocket.setSoTimeout(TIMEOUT);
-                    clientSocket.setTcpNoDelay(true);
+        while (serverSocketChannel.isOpen()) {
+            try {
+                SocketChannel clientSocketChannel = serverSocketChannel.accept();
+                closeConnectionIfExist(clientSocketChannel.socket().getInetAddress());
 
-                    SocketConnection connection = new SocketConnection(server, clientSocketChannel);
-                    acceptConnection(connection);
-                } catch (IOException e) {
-                    if (serverSocketChannel.isOpen()) {
-                        LOGGER.error("Failed to accept connection", e);
-                    }
+                // Set socket options
+                Socket clientSocket = clientSocketChannel.socket();
+                clientSocket.setSoTimeout(TIMEOUT);
+                clientSocket.setTcpNoDelay(true);
+
+                SocketConnection connection = new SocketConnection(server, clientSocketChannel);
+                acceptConnection(connection);
+            } catch (IOException e) {
+                if (serverSocketChannel.isOpen()) {
+                    LOGGER.error("Failed to accept connection", e);
                 }
             }
-        });
+        }
     }
 
     @Override

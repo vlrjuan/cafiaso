@@ -1,7 +1,5 @@
 package org.cafiaso.server.configuration;
 
-import org.cafiaso.server.Main;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -22,15 +20,23 @@ public class PropertiesServerConfiguration implements ServerConfiguration {
     private final Properties properties;
 
     /**
-     * PropertiesServerConfiguration constructor.
+     * The class loader to use to load the configuration file.
      */
-    public PropertiesServerConfiguration() {
-        properties = new Properties();
+    private final ClassLoader classLoader;
+
+    /**
+     * PropertiesServerConfiguration constructor.
+     *
+     * @param classLoader the class loader to use to load the configuration file
+     */
+    public PropertiesServerConfiguration(ClassLoader classLoader) {
+        this.properties = new Properties();
+        this.classLoader = classLoader;
     }
 
     @Override
     public void load() {
-        try (InputStream input = Main.class.getClassLoader().getResourceAsStream(CONFIGURATION_FILE)) {
+        try (InputStream input = classLoader.getResourceAsStream(CONFIGURATION_FILE)) {
             if (input == null) {
                 throw new IOException("File not found");
             }
@@ -43,11 +49,11 @@ public class PropertiesServerConfiguration implements ServerConfiguration {
 
     @Override
     public int getMaximumPlayers() {
-        return Integer.parseInt(properties.getProperty("maximum-players", "20"));
+        return Integer.parseInt(properties.getProperty("maximum-players", String.valueOf(DEFAULT_MAXIMUM_PLAYERS)));
     }
 
     @Override
     public String getDescription() {
-        return properties.getProperty("description", "A Minecraft Server");
+        return properties.getProperty("description", DEFAULT_DESCRIPTION);
     }
 }

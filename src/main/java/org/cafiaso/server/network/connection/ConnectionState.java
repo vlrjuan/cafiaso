@@ -1,20 +1,19 @@
 package org.cafiaso.server.network.connection;
 
-import org.cafiaso.server.network.handlers.handshake.HandshakePacketHandler;
-import org.cafiaso.server.network.ClientPacket;
-import org.cafiaso.server.network.PacketHandler;
-import org.cafiaso.server.network.handlers.handshake.LegacyServerListPingPacketHandler;
-import org.cafiaso.server.network.handlers.status.PingRequestHandler;
-import org.cafiaso.server.network.handlers.status.StatusRequestHandler;
-import org.cafiaso.server.network.packets.client.handshake.HandshakePacket;
-import org.cafiaso.server.network.packets.client.handshake.LegacyServerListPingPacket;
-import org.cafiaso.server.network.packets.client.status.PingRequestPacket;
-import org.cafiaso.server.network.packets.client.status.StatusRequestPacket;
+import org.cafiaso.server.network.handler.PacketHandler;
+import org.cafiaso.server.network.handler.handshake.HandshakePacketHandler;
+import org.cafiaso.server.network.handler.handshake.LegacyServerListPingPacketHandler;
+import org.cafiaso.server.network.handler.status.PingRequestHandler;
+import org.cafiaso.server.network.handler.status.StatusRequestHandler;
+import org.cafiaso.server.network.packet.client.ClientPacket;
+import org.cafiaso.server.network.packet.client.handshake.HandshakePacket;
+import org.cafiaso.server.network.packet.client.handshake.LegacyServerListPingPacket;
+import org.cafiaso.server.network.packet.client.status.PingRequestPacket;
+import org.cafiaso.server.network.packet.client.status.StatusRequestPacket;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -26,27 +25,27 @@ import java.util.stream.Collectors;
 public enum ConnectionState {
 
     HANDSHAKE(
-            new Packet<>(0x00, HandshakePacket.class, new HandshakePacketHandler()),
-            new Packet<>(0xFE, LegacyServerListPingPacket.class, new LegacyServerListPingPacketHandler())
+            new Entry<>(0x00, HandshakePacket.class, new HandshakePacketHandler()),
+            new Entry<>(0xFE, LegacyServerListPingPacket.class, new LegacyServerListPingPacketHandler())
     ),
     STATUS(
-            new Packet<>(0x00, StatusRequestPacket.class, new StatusRequestHandler()),
-            new Packet<>(0x01, PingRequestPacket.class, new PingRequestHandler())
+            new Entry<>(0x00, StatusRequestPacket.class, new StatusRequestHandler()),
+            new Entry<>(0x01, PingRequestPacket.class, new PingRequestHandler())
     ),
     LOGIN(),
     CONFIGURATION(),
     PLAY();
 
-    private final Map<Integer, Packet<?>> packets;
+    private final Map<Integer, Entry<?>> entries;
 
     /**
      * ConnectionState constructor.
      *
-     * @param packetEntries the packet entries
+     * @param entries the packet entries
      */
-    ConnectionState(Packet<?>... packetEntries) {
-        packets = Arrays.stream(packetEntries)
-                .collect(Collectors.toMap(Packet::id, Function.identity()));
+    ConnectionState(Entry<?>... entries) {
+        this.entries = Arrays.stream(entries)
+                .collect(Collectors.toMap(Entry::id, Function.identity()));
     }
 
     /**
@@ -54,23 +53,23 @@ public enum ConnectionState {
      * <p>
      * The packet is automatically instantiated using its default constructor.
      *
-     * @param id  the packet ID
      * @param <P> the packet type
-     * @return the packet entry, or {@link Optional#empty()} if the packet is not registered
+     * @param id  the packet ID
+     * @return the packet entry, or null if the packet is not registered
      */
     @SuppressWarnings("unchecked")
-    public <P extends ClientPacket> Optional<PacketEntry<P>> getPacketById(int id) {
-        Packet<P> packet = (Packet<P>) packets.get(id);
+    public <P extends ClientPacket> PacketEntry<P> getPacketById(int id) {
+        Entry<P> entry = (Entry<P>) entries.get(id);
 
-        if (packet == null) {
-            return Optional.empty();
+        if (entry == null) {
+            return null;
         }
 
         try {
-            P instance = packet.clazz.getConstructor().newInstance();
-            PacketHandler<P> handler = packet.handler();
+            P instance = entry.clazz.getConstructor().newInstance();
+            PacketHandler<P> handler = entry.handler();
 
-            return Optional.of(new PacketEntry<>(instance, handler));
+            return new PacketEntry<>(instance, handler);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
                  NoSuchMethodException e) {
             throw new RuntimeException("Failed to create packet instance", e);
@@ -87,11 +86,11 @@ public enum ConnectionState {
     }
 
     /**
-     * Represents a packet class with its ID and handler.
+     * Maps a packet ID to its class and handler.
      *
      * @param <P> the packet type
      */
-    private record Packet<P extends ClientPacket>(int id, Class<P> clazz, PacketHandler<P> handler) {
+    private record Entry<P extends ClientPacket>(int id, Class<P> clazz, PacketHandler<P> handler) {
 
     }
 }

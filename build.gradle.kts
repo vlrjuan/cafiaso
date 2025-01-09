@@ -11,6 +11,8 @@ repositories {
     mavenCentral()
 }
 
+val mockitoAgent = configurations.create("mockitoAgent")
+
 dependencies {
     // Commons cli
     implementation(libs.commons.cli)
@@ -21,6 +23,16 @@ dependencies {
     // Logging
     implementation(libs.slf4j.api)
     implementation(libs.slf4j.simple)
+
+    // JUnit
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+
+    // Mockito
+    testImplementation(libs.mockito.core)
+    mockitoAgent(libs.mockito.core) {
+        isTransitive = false
+    }
 }
 
 java {
@@ -43,4 +55,10 @@ tasks {
     shadowJar {
         archiveClassifier.set("")
     }
+
+    test {
+        useJUnitPlatform()
+        jvmArgs("-javaagent:${mockitoAgent.asPath}", "-XX:+EnableDynamicAgentLoading", "-Xshare:off")
+    }
 }
+

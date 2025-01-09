@@ -1,23 +1,22 @@
 package org.cafiaso.server.network.connection;
 
 import org.cafiaso.server.Server;
-import org.cafiaso.server.network.ClientPacket;
-import org.cafiaso.server.network.PacketHandler;
-import org.cafiaso.server.network.ServerPacket;
 import org.cafiaso.server.network.DataType;
+import org.cafiaso.server.network.buffers.InputBuffer;
+import org.cafiaso.server.network.buffers.OutputBuffer;
+import org.cafiaso.server.network.handler.PacketHandler;
+import org.cafiaso.server.network.packet.client.ClientPacket;
+import org.cafiaso.server.network.packet.server.ServerPacket;
 import org.cafiaso.server.utils.IntegerUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.Optional;
 
 /**
  * Implementation of {@link Connection} that provides common functionality for connections
- * and that writes and reads packets from a {@link DataInputStream} and {@link DataOutputStream}.
+ * and uses a {@link InputBuffer} and {@link OutputBuffer} to read and write packets.
  */
 public abstract class AbstractConnection implements Connection {
 
@@ -34,14 +33,14 @@ public abstract class AbstractConnection implements Connection {
     private final InetAddress address;
 
     /**
-     * The stream to read data from.
+     * The buffer to read from.
      */
-    private final DataInputStream in;
+    protected final InputBuffer inputBuffer;
 
     /**
-     * The stream to write data to.
+     * The buffer to write to.
      */
-    private final DataOutputStream out;
+    protected final OutputBuffer outputBuffer;
 
     /**
      * The current connection state.
@@ -51,53 +50,55 @@ public abstract class AbstractConnection implements Connection {
     /**
      * AbstractConnection constructor.
      *
-     * @param server the server instance
-     * @param in the stream to read data from
-     * @param out the stream to write data to
+     * @param server       the server instance
+     * @param address      the client address
+     * @param inputBuffer  the buffer to read from
+     * @param outputBuffer the buffer to write to
      */
-    public AbstractConnection(Server server, InetAddress address, DataInputStream in, DataOutputStream out) {
+    public AbstractConnection(Server server, InetAddress address, InputBuffer inputBuffer, OutputBuffer outputBuffer) {
         this.server = server;
         this.address = address;
-
-        this.in = in;
-        this.out = out;
-
+        this.inputBuffer = inputBuffer;
+        this.outputBuffer = outputBuffer;
         this.state = ConnectionState.HANDSHAKE;
     }
 
     @Override
-    public void readPacket() throws IOException {
-        if (in.available() == 0) {
-            return;
+    public boolean readPacket() throws IOException {
+        if (inputBuffer.isEmpty()) {
+            return false;
         }
 
-        int packetLength = DataType.VAR_INT.read(in);
-        int packetId = packetLength == 0xFE ? 0xFE : DataType.VAR_INT.read(in);
+        int packetLength = inputBuffer.read(DataType.VAR_INT);
+        int packetId = packetLength == 0xFE ? 0xFE : inputBuffer.read(DataType.VAR_INT);
 
-        Optional<ConnectionState.PacketEntry<ClientPacket>> optionalPacketEntry = state.getPacketById(packetId);
+        ConnectionState.PacketEntry<ClientPacket> packetEntry = state.getPacketById(packetId);
 
-        if (optionalPacketEntry.isPresent()) {
-            ConnectionState.PacketEntry<ClientPacket> packetEntry = optionalPacketEntry.get();
-            ClientPacket packet = packetEntry.packet();
-            PacketHandler<ClientPacket> packetHandler = packetEntry.handler();
-
-            // Read the packet data
-            packet.read(in);
-
-            LOGGER.debug("Received packet {} from {}", packet, this);
-
-            // Handle the packet
-            packetHandler.handle(this, packet);
-        } else {
+        if (packetEntry == null) {
             LOGGER.warn("Received unknown packet with id {} from {}", IntegerUtils.toHexString(packetId), this);
+
+            return false;
         }
+
+        ClientPacket packet = packetEntry.packet();
+        PacketHandler<ClientPacket> packetHandler = packetEntry.handler();
+
+        // Read the packet data
+        packet.read(inputBuffer);
+
+        LOGGER.debug("Received packet {} from {}", packet, this);
+
+        // Handle the packet
+        packetHandler.handle(this, packet);
+
+        return true;
     }
 
     @Override
     public void sendPacket(ServerPacket packet) throws IOException {
-        DataType.VAR_INT.write(out, packet.getLength());
-        DataType.VAR_INT.write(out, packet.getId());
-        packet.write(out);
+        outputBuffer.write(DataType.VAR_INT, packet.getLength());
+        outputBuffer.write(DataType.VAR_INT, packet.getId());
+        packet.write(outputBuffer);
 
         LOGGER.debug("Sent packet {} to {}", packet, this);
     }
@@ -121,12 +122,12 @@ public abstract class AbstractConnection implements Connection {
     public void close() throws IOException {
         LOGGER.info("Closing connection {}", this);
 
-        in.close();
-        out.close();
+        inputBuffer.close();
+        outputBuffer.close();
     }
 
     @Override
     public String toString() {
-        return getAddress().toString();
+        return address.toString();
     }
 }

@@ -25,6 +25,15 @@ This makes Cafiaso more stable and easier to maintain.
 Cafiaso is fully compliant with the 
 [Minecraft protocol](https://minecraft.wiki/w/Minecraft_Wiki:Projects/wiki.vg_merge/Protocol).
 
+### **4. Well-Documented**
+
+We strive to keep the codebase well-documented and easy to understand.
+
+### **5. Well-Tested**
+
+Cafiaso is thoroughly tested using JUnit and Mockito.
+We aim to maintain a high test coverage to ensure the server's stability (currently at 80%).
+
 ## Getting Started
 
 ### Prerequisites

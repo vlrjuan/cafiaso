@@ -27,16 +27,26 @@ public abstract class AbstractNetworkServer implements NetworkServer {
     @Override
     public void close() throws IOException {
         synchronized (connections) {
-            connections.values().forEach(connection -> {
+            for (Connection connection : connections.values()) {
                 try {
                     connection.close();
                 } catch (IOException e) {
                     LOGGER.error("Failed to close connection {}", connection, e);
                 }
-            });
+            }
 
             connections.clear();
         }
+    }
+
+    /**
+     * Gets an immutable map of all active connections.
+     *
+     * @return an immutable map of all active connections
+     * where the key is the address and the value is the connection
+     */
+    public Map<InetAddress, Connection> getConnections() {
+        return Map.copyOf(connections);
     }
 
     /**
@@ -59,7 +69,9 @@ public abstract class AbstractNetworkServer implements NetworkServer {
      * Accepts an incoming connection and starts reading packets from it, asynchronously.
      */
     protected void acceptConnection(Connection connection) {
-        LOGGER.info("Incoming connection from {}", connection.getAddress());
+        LOGGER.info("Incoming connection from {}", connection);
+
+        connections.put(connection.getAddress(), connection);
 
         Thread.startVirtualThread(() -> {
             while (connection.isOpen()) {
@@ -72,7 +84,5 @@ public abstract class AbstractNetworkServer implements NetworkServer {
                 }
             }
         });
-
-        connections.put(connection.getAddress(), connection);
     }
 }

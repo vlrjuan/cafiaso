@@ -11,6 +11,29 @@ public class VarIntDataType implements DataType<Integer> {
     private static final int SEGMENT_BITS = 0x7F;
     private static final int CONTINUE_BIT = 0x80;
 
+    /**
+     * Gets the size of the given value.
+     * <p>
+     * Mainly used to calculate the packet length.
+     *
+     * @param value the value
+     * @return the size of the value
+     */
+    public static int getSize(Integer value) {
+        int size = 0;
+
+        while (true) {
+            if ((value & ~SEGMENT_BITS) == 0) {
+                size++;
+
+                return size;
+            }
+
+            size++;
+            value >>>= 7;
+        }
+    }
+
     @Override
     public Integer read(DataInputStream in) throws IOException {
         int value = 0;
@@ -25,7 +48,7 @@ public class VarIntDataType implements DataType<Integer> {
 
             position += 7;
 
-            if (position >= 32) throw new RuntimeException("VarInt is too big");
+            if (position >= 32) throw new IOException("VarInt is too big");
         }
 
         return value;
@@ -42,22 +65,6 @@ public class VarIntDataType implements DataType<Integer> {
 
             out.writeByte((value & SEGMENT_BITS) | CONTINUE_BIT);
 
-            value >>>= 7;
-        }
-    }
-
-    @Override
-    public int getSize(Integer value) {
-        int size = 0;
-
-        while (true) {
-            if ((value & ~SEGMENT_BITS) == 0) {
-                size++;
-
-                return size;
-            }
-
-            size++;
             value >>>= 7;
         }
     }

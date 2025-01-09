@@ -1,7 +1,7 @@
 package org.cafiaso.server.network.connection;
 
 import org.cafiaso.server.Server;
-import org.cafiaso.server.network.ServerPacket;
+import org.cafiaso.server.network.packet.server.ServerPacket;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -18,9 +18,11 @@ public interface Connection {
      * <p>
      * If no packet is available, this method should return immediately.
      *
+     * @return {@code true} if a packet was read, {@code false} if the buffer was empty
+     * or if the packet was unknown
      * @throws IOException if an I/O error occurs
      */
-    void readPacket() throws IOException;
+    boolean readPacket() throws IOException;
 
     /**
      * Sends a packet to the client.

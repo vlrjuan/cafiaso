@@ -1,11 +1,10 @@
 package org.cafiaso.server.network.connection;
 
 import org.cafiaso.server.Server;
+import org.cafiaso.server.network.buffers.InputBuffer;
+import org.cafiaso.server.network.buffers.OutputBuffer;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.channels.Channels;
 import java.nio.channels.SocketChannel;
 
 /**
@@ -25,12 +24,7 @@ public class SocketConnection extends AbstractConnection {
      * @param channel the socket channel
      */
     public SocketConnection(Server server, SocketChannel channel) {
-        super(
-                server,
-                channel.socket().getInetAddress(),
-                new DataInputStream(Channels.newInputStream(channel)),
-                new DataOutputStream(Channels.newOutputStream(channel))
-        );
+        super(server, channel.socket().getInetAddress(), InputBuffer.fromChannel(channel), OutputBuffer.fromChannel(channel));
 
         this.channel = channel;
     }

@@ -1,16 +1,11 @@
 package org.cafiaso.server.player;
 
-/**
- * Manages player data.
- */
-public class PlayerManager {
+public interface PlayerManager {
 
     /**
      * Gets the number of online players.
      *
      * @return the online player count
      */
-    public int getOnlinePlayers() {
-        return 0;
-    }
+    int getOnlinePlayers();
 }

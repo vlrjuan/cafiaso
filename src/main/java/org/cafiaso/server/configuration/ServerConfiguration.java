@@ -10,6 +10,10 @@ package org.cafiaso.server.configuration;
  */
 public interface ServerConfiguration {
 
+    int DEFAULT_MAXIMUM_PLAYERS = 20;
+
+    String DEFAULT_DESCRIPTION = "A Minecraft Server";
+
     /**
      * Loads the configuration.
      */
@@ -18,7 +22,7 @@ public interface ServerConfiguration {
     /**
      * Gets the maximum number of players that can be connected to the server.
      * <p>
-     * The default value is 20.
+     * Defaults to <code>DEFAULT_MAXIMUM_PLAYERS</code>
      *
      * @return the maximum number of players
      */
@@ -27,7 +31,7 @@ public interface ServerConfiguration {
     /**
      * Gets the description (motd) of the server.
      * <p>
-     * The default value is "A Minecraft Server".
+     * Defaults to <code>DEFAULT_DESCRIPTION</code>
      *
      * @return the description of the server
      */
