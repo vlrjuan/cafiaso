@@ -1,15 +1,20 @@
 package org.cafiaso.server.network.types;
 
+import org.cafiaso.server.network.DataType;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class EnumDataTypeTest {
 
-    private static final EnumDataType<EnumVarIntTest, Integer, VarIntDataType> ENUM_VAR_INT_DATA_TYPE = new EnumDataType<>(EnumVarIntTest.class, new VarIntDataType(), EnumVarIntTest::getValue);
-    private static final EnumDataType<EnumStringTest, String, StringDataType> ENUM_STRING_DATA_TYPE = new EnumDataType<>(EnumStringTest.class, new StringDataType(), EnumStringTest::getValue);
+    private static final EnumDataType<EnumVarIntTest, Integer, DataType<Integer>> ENUM_VAR_INT_DATA_TYPE = new EnumDataType<>(EnumVarIntTest.class, DataType.VAR_INT, EnumVarIntTest::getValue);
+    private static final EnumDataType<EnumStringTest, String, DataType<String>> ENUM_STRING_DATA_TYPE = new EnumDataType<>(EnumStringTest.class, DataType.STRING, EnumStringTest::getValue);
 
     @Test
     void read_ShouldReadEnumVarInt() throws IOException {
@@ -36,7 +41,7 @@ class EnumDataTypeTest {
         in = new ByteArrayInputStream(bytes);
         DataInputStream finalDataIn = new DataInputStream(in);
 
-        assertThrows(IOException.class, () -> ENUM_VAR_INT_DATA_TYPE.read(finalDataIn));
+        assertThrowsExactly(IOException.class, () -> ENUM_VAR_INT_DATA_TYPE.read(finalDataIn), "Invalid enum value");
     }
 
     @Test
@@ -64,7 +69,7 @@ class EnumDataTypeTest {
         in = new ByteArrayInputStream(bytes);
         DataInputStream finalDataIn = new DataInputStream(in);
 
-        assertThrows(IOException.class, () -> ENUM_STRING_DATA_TYPE.read(finalDataIn));
+        assertThrowsExactly(IOException.class, () -> ENUM_STRING_DATA_TYPE.read(finalDataIn), "Invalid enum value");
     }
 
     @Test

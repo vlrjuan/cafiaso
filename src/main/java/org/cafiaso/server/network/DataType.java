@@ -21,8 +21,29 @@ public interface DataType<T> {
     DataType<String> STRING = new StringDataType();
     DataType<Integer> VAR_INT = new VarIntDataType();
 
+    /**
+     * Creates a new {@link EnumDataType} instance.
+     *
+     * @param enumClass the enum class
+     * @param dataType  the {@link DataType} of the data
+     * @param getter    the getter function that maps the enum to the type of the data
+     * @param <E>       the enum type
+     * @param <T>       the type of the data
+     * @param <D>       the {@link DataType}
+     * @return the {@link EnumDataType} instance
+     */
     static <E extends Enum<E>, T, D extends DataType<T>> DataType<E> ENUM(Class<E> enumClass, D dataType, Function<E, T> getter) {
         return new EnumDataType<>(enumClass, dataType, getter);
+    }
+
+    /**
+     * Creates a new {@link StringDataType} instance.
+     *
+     * @param maxLength the maximum length of the string. If the string is longer, reading will throw an exception
+     * @return the {@link StringDataType} instance
+     */
+    static DataType<String> STRING(int maxLength) {
+        return new StringDataType(maxLength);
     }
 
     /**

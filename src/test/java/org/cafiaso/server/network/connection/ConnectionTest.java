@@ -10,7 +10,11 @@ import org.cafiaso.server.network.packet.client.ClientPacket;
 import org.cafiaso.server.network.packet.server.ServerPacket;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 
 import static org.junit.jupiter.api.Assertions.*;

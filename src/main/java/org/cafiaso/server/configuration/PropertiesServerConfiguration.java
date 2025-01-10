@@ -48,8 +48,8 @@ public class PropertiesServerConfiguration implements ServerConfiguration {
     }
 
     @Override
-    public int getMaximumPlayers() {
-        return Integer.parseInt(properties.getProperty("maximum-players", String.valueOf(DEFAULT_MAXIMUM_PLAYERS)));
+    public int getMaxPlayers() {
+        return Integer.parseInt(properties.getProperty("max-players", String.valueOf(DEFAULT_MAX_PLAYERS)));
     }
 
     @Override

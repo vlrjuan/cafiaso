@@ -34,6 +34,33 @@ public class VarIntDataType implements DataType<Integer> {
         }
     }
 
+    /**
+     * Converts the given value to a byte array.
+     * <p>
+     * Mainly used for testing purposes.
+     *
+     * @param value the value
+     * @return the byte array
+     */
+    public static byte[] toByteArray(Integer value) {
+        byte[] bytes = new byte[getSize(value)];
+
+        int index = 0;
+
+        while (true) {
+            if ((value & ~SEGMENT_BITS) == 0) {
+                bytes[index] = value.byteValue();
+
+                return bytes;
+            }
+
+            bytes[index] = (byte) ((value & SEGMENT_BITS) | CONTINUE_BIT);
+
+            value >>>= 7;
+            index++;
+        }
+    }
+
     @Override
     public Integer read(DataInputStream in) throws IOException {
         int value = 0;

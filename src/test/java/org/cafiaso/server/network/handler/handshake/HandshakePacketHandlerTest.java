@@ -58,6 +58,6 @@ class HandshakePacketHandlerTest {
     void handle_ShouldThrowException_WhenIntentIsTransfer() {
         when(packet.getNextState()).thenReturn(HandshakePacket.Intent.TRANSFER);
 
-        assertThrows(UnsupportedOperationException.class, () -> HANDLER.handle(connection, packet));
+        assertThrowsExactly(UnsupportedOperationException.class, () -> HANDLER.handle(connection, packet), "Transfer is not supported");
     }
 }

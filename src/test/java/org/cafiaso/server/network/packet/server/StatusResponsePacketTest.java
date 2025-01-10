@@ -7,7 +7,11 @@ import org.cafiaso.server.network.buffers.OutputBuffer;
 import org.cafiaso.server.network.packet.server.status.StatusResponsePacket;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,7 +19,7 @@ class StatusResponsePacketTest {
 
     // Data
     private static final String JSON_RESPONSE = "{\"players\":{\"max\":%d,\"online\":%d},\"description\":{\"text\":\"%s\"},\"version\":{\"protocol\":%d,\"name\":\"%s\"}}"
-            .formatted(ServerConfiguration.DEFAULT_MAXIMUM_PLAYERS, 0, ServerConfiguration.DEFAULT_DESCRIPTION, Server.PROTOCOL_VERSION, Server.VERSION_NAME);
+            .formatted(ServerConfiguration.DEFAULT_MAX_PLAYERS, 0, ServerConfiguration.DEFAULT_DESCRIPTION, Server.PROTOCOL_VERSION, Server.VERSION_NAME);
 
     // Data types
     private static final DataType<String> STRING_DATA_TYPE = DataType.STRING;

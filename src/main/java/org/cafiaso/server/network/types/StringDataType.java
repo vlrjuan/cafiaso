@@ -9,9 +9,29 @@ import java.nio.charset.StandardCharsets;
 
 public class StringDataType implements DataType<String> {
 
+    public static final int MAX_LENGTH = 32767;
+
+    private final int maxLength;
+
+    public StringDataType(int maxLength) {
+        this.maxLength = maxLength;
+    }
+
+    public StringDataType() {
+        this(MAX_LENGTH);
+    }
+
     @Override
     public String read(DataInputStream in) throws IOException {
         int length = DataType.VAR_INT.read(in);
+
+        if (length > maxLength) {
+            throw new IOException(
+                    "String is too long. Waiting for maximum %d characters, received %d."
+                            .formatted(maxLength, length)
+            );
+        }
+
         byte[] value = new byte[length];
         in.readFully(value);
 

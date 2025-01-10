@@ -23,7 +23,7 @@ class PropertiesServerConfigurationTest {
     @Test
     void test_ShouldReturnCorrectValues() {
         String config = """
-                maximum-players=50
+                max-players=50
                 description=A Cafiaso Server
                 """;
         InputStream mockInputStream = new ByteArrayInputStream(config.getBytes());
@@ -32,7 +32,7 @@ class PropertiesServerConfigurationTest {
 
         configuration.load();
 
-        assertEquals(50, configuration.getMaximumPlayers());
+        assertEquals(50, configuration.getMaxPlayers());
         assertEquals("A Cafiaso Server", configuration.getDescription());
     }
 
@@ -46,7 +46,7 @@ class PropertiesServerConfigurationTest {
     @Test
     void test_ShouldReturnDefaultValue_WhenPropertyIsMissing() {
         String config = """
-                maximum-players=50
+                max-players=50
                 """;
         InputStream mockInputStream = new ByteArrayInputStream(config.getBytes());
 
@@ -54,7 +54,7 @@ class PropertiesServerConfigurationTest {
 
         configuration.load();
 
-        assertEquals(50, configuration.getMaximumPlayers());
+        assertEquals(50, configuration.getMaxPlayers());
         assertEquals(ServerConfiguration.DEFAULT_DESCRIPTION, configuration.getDescription());
     }
 
@@ -67,13 +67,13 @@ class PropertiesServerConfigurationTest {
 
         configuration.load();
 
-        assertEquals(ServerConfiguration.DEFAULT_MAXIMUM_PLAYERS, configuration.getMaximumPlayers());
+        assertEquals(ServerConfiguration.DEFAULT_MAX_PLAYERS, configuration.getMaxPlayers());
         assertEquals(ServerConfiguration.DEFAULT_DESCRIPTION, configuration.getDescription());
     }
 
     @Test
     void test_ShouldReturnDefaultValues_WhenConfigurationIsNotLoaded() {
-        assertEquals(ServerConfiguration.DEFAULT_MAXIMUM_PLAYERS, configuration.getMaximumPlayers());
+        assertEquals(ServerConfiguration.DEFAULT_MAX_PLAYERS, configuration.getMaxPlayers());
         assertEquals(ServerConfiguration.DEFAULT_DESCRIPTION, configuration.getDescription());
     }
 }

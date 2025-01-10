@@ -12,13 +12,13 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class PingRequestHandlerTest {
+class PingRequestPacketHandlerTest {
 
     // Data
     private static final long PAYLOAD = 123L;
 
     // Handler
-    private static final PingRequestHandler HANDLER = new PingRequestHandler();
+    private static final PingRequestPacketHandler HANDLER = new PingRequestPacketHandler();
 
     private Connection connection;
 

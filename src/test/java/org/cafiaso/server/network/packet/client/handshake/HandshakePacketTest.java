@@ -5,8 +5,13 @@ import org.cafiaso.server.network.DataType;
 import org.cafiaso.server.network.buffers.InputBuffer;
 import org.junit.jupiter.api.Test;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 
+import static org.cafiaso.server.network.packet.client.handshake.HandshakePacket.MAX_SERVER_ADDRESS_LENGTH;
 import static org.junit.jupiter.api.Assertions.*;
 
 class HandshakePacketTest {
@@ -53,7 +58,7 @@ class HandshakePacketTest {
         DataOutputStream dataOut = new DataOutputStream(out);
 
         VAR_INT_DATA_TYPE.write(dataOut, PROTOCOL_VERSION);
-        STRING_DATA_TYPE.write(dataOut, "0".repeat(HandshakePacket.MAX_SERVER_ADDRESS_LENGTH + 1));
+        STRING_DATA_TYPE.write(dataOut, "0".repeat(MAX_SERVER_ADDRESS_LENGTH + 1));
         UNSIGNED_SHORT_DATA_TYPE.write(dataOut, SERVER_PORT);
         INTENT_DATA_TYPE.write(dataOut, NEXT_STATE);
 
@@ -61,7 +66,10 @@ class HandshakePacketTest {
         DataInputStream dataIn = new DataInputStream(in);
 
         try (InputBuffer buffer = new InputBuffer(dataIn)) {
-            assertThrows(IOException.class, () -> new HandshakePacket().read(buffer), "Server address is too long");
+            assertThrowsExactly(IOException.class, () -> new HandshakePacket().read(buffer),
+                    "String is too long. Waiting for maximum %d characters, received %d."
+                            .formatted(MAX_SERVER_ADDRESS_LENGTH, MAX_SERVER_ADDRESS_LENGTH + 1)
+            );
         }
     }
 }

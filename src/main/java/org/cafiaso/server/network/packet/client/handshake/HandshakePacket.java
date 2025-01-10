@@ -10,6 +10,7 @@ public class HandshakePacket implements ClientPacket {
 
     public static final int MAX_SERVER_ADDRESS_LENGTH = 255;
 
+    private static final DataType<String> STRING_DATA_TYPE = DataType.STRING(MAX_SERVER_ADDRESS_LENGTH);
     private static final DataType<Intent> INTENT_DATA_TYPE = DataType.ENUM(HandshakePacket.Intent.class, DataType.VAR_INT, HandshakePacket.Intent::getId);
 
     private int protocolVersion;
@@ -20,10 +21,7 @@ public class HandshakePacket implements ClientPacket {
     @Override
     public void read(InputBuffer buffer) throws IOException {
         protocolVersion = buffer.read(DataType.VAR_INT);
-        serverAddress = buffer.read(DataType.STRING);
-        if (serverAddress.length() > MAX_SERVER_ADDRESS_LENGTH) {
-            throw new IOException("Server address is too long");
-        }
+        serverAddress = buffer.read(STRING_DATA_TYPE);
         serverPort = buffer.read(DataType.UNSIGNED_SHORT);
         intent = buffer.read(INTENT_DATA_TYPE);
     }

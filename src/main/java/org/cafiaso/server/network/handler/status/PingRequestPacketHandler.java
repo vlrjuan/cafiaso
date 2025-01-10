@@ -7,7 +7,7 @@ import org.cafiaso.server.network.packet.server.status.PingResponsePacket;
 
 import java.io.IOException;
 
-public class PingRequestHandler implements PacketHandler<PingRequestPacket> {
+public class PingRequestPacketHandler implements PacketHandler<PingRequestPacket> {
 
     @Override
     public void handle(Connection connection, PingRequestPacket packet) throws IOException {

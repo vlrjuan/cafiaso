@@ -3,8 +3,8 @@ package org.cafiaso.server.network.connection;
 import org.cafiaso.server.network.handler.PacketHandler;
 import org.cafiaso.server.network.handler.handshake.HandshakePacketHandler;
 import org.cafiaso.server.network.handler.handshake.LegacyServerListPingPacketHandler;
-import org.cafiaso.server.network.handler.status.PingRequestHandler;
-import org.cafiaso.server.network.handler.status.StatusRequestHandler;
+import org.cafiaso.server.network.handler.status.PingRequestPacketHandler;
+import org.cafiaso.server.network.handler.status.StatusRequestPacketHandler;
 import org.cafiaso.server.network.packet.client.ClientPacket;
 import org.cafiaso.server.network.packet.client.handshake.HandshakePacket;
 import org.cafiaso.server.network.packet.client.handshake.LegacyServerListPingPacket;
@@ -29,8 +29,8 @@ public enum ConnectionState {
             new Entry<>(0xFE, LegacyServerListPingPacket.class, new LegacyServerListPingPacketHandler())
     ),
     STATUS(
-            new Entry<>(0x00, StatusRequestPacket.class, new StatusRequestHandler()),
-            new Entry<>(0x01, PingRequestPacket.class, new PingRequestHandler())
+            new Entry<>(0x00, StatusRequestPacket.class, new StatusRequestPacketHandler()),
+            new Entry<>(0x01, PingRequestPacket.class, new PingRequestPacketHandler())
     ),
     LOGIN(),
     CONFIGURATION(),

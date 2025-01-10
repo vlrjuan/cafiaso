@@ -15,15 +15,15 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-class StatusRequestHandlerTest {
+class StatusRequestPacketHandlerTest {
 
     // Data
-    private static final int MAXIMUM_PLAYERS = ServerConfiguration.DEFAULT_MAXIMUM_PLAYERS;
+    private static final int MAXIMUM_PLAYERS = ServerConfiguration.DEFAULT_MAX_PLAYERS;
     private static final int ONLINE_PLAYERS = 0;
     private static final String DESCRIPTION = ServerConfiguration.DEFAULT_DESCRIPTION;
 
     // Handler
-    private static final StatusRequestHandler HANDLER = new StatusRequestHandler();
+    private static final StatusRequestPacketHandler HANDLER = new StatusRequestPacketHandler();
 
     private Connection connection;
 
@@ -37,7 +37,7 @@ class StatusRequestHandlerTest {
         ServerConfiguration configuration = mock(ServerConfiguration.class);
         when(server.getConfiguration()).thenReturn(configuration);
 
-        when(configuration.getMaximumPlayers()).thenReturn(MAXIMUM_PLAYERS);
+        when(configuration.getMaxPlayers()).thenReturn(MAXIMUM_PLAYERS);
         when(configuration.getDescription()).thenReturn(DESCRIPTION);
 
         PlayerManager playerManager = mock(PlayerManager.class);

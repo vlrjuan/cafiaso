@@ -9,7 +9,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
-public class StatusRequestHandler implements PacketHandler<StatusRequestPacket> {
+public class StatusRequestPacketHandler implements PacketHandler<StatusRequestPacket> {
 
     @Override
     public void handle(Connection connection, StatusRequestPacket packet) throws IOException {
@@ -24,7 +24,7 @@ public class StatusRequestHandler implements PacketHandler<StatusRequestPacket> 
         response.put("version", version);
 
         JSONObject players = new JSONObject();
-        players.put("max", server.getConfiguration().getMaximumPlayers());
+        players.put("max", server.getConfiguration().getMaxPlayers());
         players.put("online", server.getPlayerManager().getOnlinePlayers());
 
         response.put("players", players);
