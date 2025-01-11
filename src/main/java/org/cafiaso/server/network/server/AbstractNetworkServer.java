@@ -50,22 +50,6 @@ public abstract class AbstractNetworkServer implements NetworkServer {
     }
 
     /**
-     * Closes the connection if it exists but does not remove it from the connections map.
-     * <p>
-     * If the connection does not exist, this method does nothing.
-     *
-     * @param address the address of the connection
-     * @throws IOException if an I/O error occurs
-     */
-    protected void closeConnectionIfExist(InetAddress address) throws IOException {
-        Connection connection = connections.get(address);
-        if (connection != null) {
-            LOGGER.debug("Closing existing connection from {}", address);
-            connection.close();
-        }
-    }
-
-    /**
      * Accepts an incoming connection and starts reading packets from it, asynchronously.
      */
     protected void acceptConnection(Connection connection) {

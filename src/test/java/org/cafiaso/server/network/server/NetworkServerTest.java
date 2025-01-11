@@ -68,21 +68,6 @@ class NetworkServerTest {
     }
 
     @Test
-    void closeConnectionIfExist_ShouldCloseExistingConnection() throws IOException {
-        server.acceptConnection(connection);
-        server.closeConnectionIfExist(address);
-
-        verify(connection).close();
-    }
-
-    @Test
-    void closeConnectionIfExist_ShouldDoNothingIfConnectionDoesNotExist() throws IOException {
-        server.closeConnectionIfExist(address);
-
-        verify(connection, never()).close();
-    }
-
-    @Test
     void acceptConnection_ShouldStartReadingPacket() throws IOException, InterruptedException {
         server.acceptConnection(connection);
 
@@ -94,6 +79,18 @@ class NetworkServerTest {
         // execution's speed
         verify(connection, atLeast(1)).isOpen();
         verify(connection).readPacket();
+    }
+
+    @Test
+    void acceptConnection_ShouldReplaceExistingConnection_WhenNewConnectionWithSameIpIsCreated() {
+        Connection connection2 = mock(Connection.class);
+        when(connection2.getAddress()).thenReturn(address);
+
+        server.acceptConnection(connection);
+        server.acceptConnection(connection2);
+
+        assertEquals(1, server.getConnections().size());
+        assertEquals(connection2, server.getConnections().get(address));
     }
 
     // We need this class to initialize AbstractNetworkServer connections map

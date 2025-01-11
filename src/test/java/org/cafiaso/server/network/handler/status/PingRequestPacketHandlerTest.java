@@ -28,7 +28,7 @@ class PingRequestPacketHandlerTest {
     }
 
     @Test
-    void handle_ShouldSendPingResponsePacket() throws IOException {
+    void handle_ShouldSendPingResponsePacketAndCLoseConnection() throws IOException {
         ArgumentCaptor<PingResponsePacket> captor = ArgumentCaptor.forClass(PingResponsePacket.class);
 
         PingRequestPacket packet = mock(PingRequestPacket.class);
@@ -37,6 +37,8 @@ class PingRequestPacketHandlerTest {
         HANDLER.handle(connection, packet);
 
         verify(connection).sendPacket(captor.capture());
+
+        verify(connection).close();
 
         PingResponsePacket capturedPacket = captor.getValue();
         assertNotNull(capturedPacket);

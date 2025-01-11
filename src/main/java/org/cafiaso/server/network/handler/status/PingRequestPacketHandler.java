@@ -14,5 +14,7 @@ public class PingRequestPacketHandler implements PacketHandler<PingRequestPacket
         long payload = packet.getPayload();
 
         connection.sendPacket(new PingResponsePacket(payload));
+
+        connection.close();
     }
 }
