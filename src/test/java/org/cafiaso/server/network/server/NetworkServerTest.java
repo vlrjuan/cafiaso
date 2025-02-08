@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.net.InetAddress;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -14,7 +13,6 @@ class NetworkServerTest {
 
     private AbstractNetworkServer server;
     private Connection connection;
-    private InetAddress address;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -22,14 +20,12 @@ class NetworkServerTest {
 
         connection = mock(Connection.class);
         when(connection.isOpen()).thenReturn(true);
-        when(connection.readPacket()).then(invocation -> {
-            when(connection.isOpen()).thenReturn(false); // Close the connection after reading a packet
+        // When connection reads a packet, next call to isOpen() will return false
+        doAnswer(invocation -> {
+            when(connection.isOpen()).thenReturn(false);
 
-            return true;
-        });
-
-        address = InetAddress.getByName("127.0.0.1");
-        when(connection.getAddress()).thenReturn(address);
+            return null;
+        }).when(connection).readPackets();
     }
 
     @Test
@@ -48,9 +44,6 @@ class NetworkServerTest {
     @Test
     void close_ShouldCloseAllConnections_WhenOneConnectionThrownException() throws IOException {
         Connection connection2 = mock(Connection.class);
-
-        InetAddress address2 = InetAddress.getByName("127.0.0.2");
-        when(connection2.getAddress()).thenReturn(address2);
 
         doThrow(new IOException()).when(connection2).close();
 
@@ -71,26 +64,26 @@ class NetworkServerTest {
     void acceptConnection_ShouldStartReadingPacket() throws IOException, InterruptedException {
         server.acceptConnection(connection);
 
-        assertEquals(connection, server.getConnections().get(address));
+        assertEquals(connection, server.getConnections().getFirst());
 
         Thread.sleep(100); // Delay to ensure thread execution
 
         // Should be 2 calls, but sometimes it's only 1 because of the
         // execution's speed
         verify(connection, atLeast(1)).isOpen();
-        verify(connection).readPacket();
+        verify(connection).readPackets();
     }
 
     @Test
-    void acceptConnection_ShouldReplaceExistingConnection_WhenNewConnectionWithSameIpIsCreated() {
-        Connection connection2 = mock(Connection.class);
-        when(connection2.getAddress()).thenReturn(address);
-
+    void closeConnection_ShouldRemoveConnection() throws IOException {
         server.acceptConnection(connection);
-        server.acceptConnection(connection2);
 
         assertEquals(1, server.getConnections().size());
-        assertEquals(connection2, server.getConnections().get(address));
+
+        server.closeConnection(connection);
+
+        verify(connection).close();
+        assertTrue(server.getConnections().isEmpty());
     }
 
     // We need this class to initialize AbstractNetworkServer connections map

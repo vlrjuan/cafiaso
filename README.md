@@ -22,12 +22,15 @@ We don't use any existing NMS (net.minecraft.server) codebase, as well as CraftB
 Cafiaso is written *from scratch*, which allows us to have full control over the server's behavior.
 This makes Cafiaso more stable and easier to maintain.
 
-Cafiaso is fully compliant with the 
+Cafiaso is fully compliant with the
 [Minecraft protocol](https://minecraft.wiki/w/Minecraft_Wiki:Projects/wiki.vg_merge/Protocol).
 
 ### **4. Well-Documented**
 
 We strive to keep the codebase well-documented and easy to understand.
+All methods, classes and constructors are documented using Javadoc.
+
+*Fun fact*: Cafiaso has almost as many lines of documentation as code!
 
 ### **5. Well-Tested**
 
@@ -46,7 +49,8 @@ We aim to maintain a high test coverage to ensure the server's stability (curren
 1. Clone the repository.
 2. Compile the project using `./gradlew build`.
 3. Run the server using `java -jar server.jar`.
-4. The server will start listening for connections on `localhost:25565` by default (can be configured using `-h` and `-p` flags).
+4. The server will start listening for connections on `localhost:25565` by default (can be configured using `-h` and
+   `-p` flags).
 
 ### Configuration
 
@@ -61,4 +65,8 @@ Contributions are welcome! If you have suggestions or bug fixes, feel free to op
 
 This project is licensed under the MIT License. See the LICENSE file for details.
 
+## Acknowledgements
 
+- Thanks to the [wiki.vg](https://wiki.vg) community for documenting the Minecraft protocol.
+- Thanks to [Minestom](https://github.com/minestom/minestom) and [Glowstone](https://github.com/GlowstoneMC/Glowstone/),
+  which inspired us to create Cafiaso.

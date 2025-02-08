@@ -1,48 +1,43 @@
 package org.cafiaso.server.network.packet.server;
 
-import org.cafiaso.server.network.buffers.OutputBuffer;
-import org.cafiaso.server.network.types.VarIntDataType;
+import org.cafiaso.server.network.connection.Connection;
+import org.cafiaso.server.network.connection.ConnectionState;
+import org.cafiaso.server.network.stream.output.OutputStream;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 /**
- * Represents a packet that can be sent to the client
- * using {@link org.cafiaso.server.network.connection.Connection#sendPacket(ServerPacket)}.
+ * Represents a packet that can be sent to the client using {@link Connection#sendPacket(ServerPacket)}.
+ * <p>
+ * Packet serialization is done by writing the data to an {@link OutputStream}.
  */
-public interface ServerPacket {
+public abstract class ServerPacket {
+
+    private final int id;
+
+    /**
+     * ServerPacket constructor.
+     *
+     * @param id the packet ID. Must be unique for a given {@link ConnectionState}.
+     */
+    public ServerPacket(int id) {
+        this.id = id;
+    }
 
     /**
      * Gets the packet ID.
      *
      * @return the packet ID
      */
-    int getId();
-
-    /**
-     * Gets the length of the packet when serialized.
-     * <p>
-     * <code>LENGTH = PACKET ID + PACKET DATA</code>
-     *
-     * @return the packet length
-     * @throws IOException if an I/O error occurs
-     */
-    default int getLength() throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-
-        try (OutputBuffer buffer = new OutputBuffer(new DataOutputStream(out))) {
-            write(buffer);
-
-            return out.size() + VarIntDataType.getSize(getId());
-        }
+    public int getId() {
+        return id;
     }
 
     /**
-     * Writes the packet data to the given buffer.
+     * Writes the packet data to the given {@link OutputStream}.
      *
-     * @param buffer the buffer to write to
+     * @param out the output to write to
      * @throws IOException if an I/O error occurs
      */
-    void write(OutputBuffer buffer) throws IOException;
+    public abstract void write(OutputStream out) throws IOException;
 }

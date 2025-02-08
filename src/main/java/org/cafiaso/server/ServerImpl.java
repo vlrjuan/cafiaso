@@ -2,72 +2,83 @@ package org.cafiaso.server;
 
 import org.cafiaso.server.configuration.PropertiesServerConfiguration;
 import org.cafiaso.server.configuration.ServerConfiguration;
+import org.cafiaso.server.mojang.MojangClient;
+import org.cafiaso.server.mojang.MojangClientImpl;
 import org.cafiaso.server.network.server.NetworkServer;
 import org.cafiaso.server.network.server.SocketNetworkServer;
 import org.cafiaso.server.player.PlayerManager;
 import org.cafiaso.server.player.PlayerManagerImpl;
+import org.cafiaso.server.security.SecurityManager;
+import org.cafiaso.server.security.SecurityManagerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 /**
- * Default implementation of the {@link Server} interface.
+ * Default {@link Server} implementation.
  */
 public class ServerImpl implements Server {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerImpl.class);
 
-    /**
-     * The server configuration.
-     */
     private final ServerConfiguration configuration;
 
-    /**
-     * The network server.
-     */
     private final NetworkServer networkServer;
 
-    /**
-     * The player manager.
-     */
+    private final SecurityManager securityManager;
     private final PlayerManager playerManager;
 
-    /**
-     * Whether the server is running.
-     */
+    private final MojangClient mojangClient;
+
     private volatile boolean isRunning = false;
 
     /**
-     * Server constructor.
+     * Default ServerImpl constructor.
      */
     public ServerImpl() {
         this.configuration = new PropertiesServerConfiguration(getClass().getClassLoader());
+
         this.networkServer = new SocketNetworkServer(this);
+
+        this.securityManager = new SecurityManagerImpl();
         this.playerManager = new PlayerManagerImpl();
+
+        this.mojangClient = new MojangClientImpl();
     }
 
     /**
-     * Server constructor.
+     * ServerImpl constructor used for testing.
      *
-     * @param playerManager the player manager
-     * @param networkServer the network server
-     * @param configuration the server configuration
+     * @param configuration   the server configuration
+     * @param networkServer   the network server
+     * @param securityManager the security manager
+     * @param playerManager   the player manager
+     * @param mojangClient    the Mojang client
      */
-    public ServerImpl(PlayerManager playerManager, NetworkServer networkServer, ServerConfiguration configuration) {
-        this.playerManager = playerManager;
-        this.networkServer = networkServer;
+    public ServerImpl(
+            ServerConfiguration configuration,
+            NetworkServer networkServer,
+            SecurityManager securityManager,
+            PlayerManager playerManager,
+            MojangClient mojangClient
+    ) {
         this.configuration = configuration;
+        this.networkServer = networkServer;
+        this.securityManager = securityManager;
+        this.mojangClient = mojangClient;
+        this.playerManager = playerManager;
     }
 
     @Override
     public void start(String host, int port) {
         LOGGER.info("Starting server on {}:{}", host, port);
 
-        // Load the server configuration
         configuration.load();
 
-        // Shutdown hook
+        // Generate a new public/private key pair for packet encryption
+        securityManager.generateKeyPair();
+
         Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
 
         isRunning = true;
@@ -118,7 +129,22 @@ public class ServerImpl implements Server {
     }
 
     @Override
+    public NetworkServer getNetworkServer() {
+        return networkServer;
+    }
+
+    @Override
+    public SecurityManager getSecurityManager() {
+        return securityManager;
+    }
+
+    @Override
     public PlayerManager getPlayerManager() {
         return playerManager;
+    }
+
+    @Override
+    public MojangClient getMojangClient() {
+        return mojangClient;
     }
 }

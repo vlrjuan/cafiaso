@@ -13,7 +13,6 @@ class ServerBootstrapTest {
     @BeforeEach
     void setUp() {
         server = mock(Server.class);
-        doNothing().when(server).start(anyString(), anyInt());
 
         serverBootstrap = new ServerBootstrap(server);
     }

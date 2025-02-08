@@ -19,7 +19,7 @@ public interface PacketHandler<P extends ClientPacket> {
      *
      * @param connection the connection that sent the packet
      * @param packet     the packet to handle
-     * @throws IOException if an I/O error occurs
+     * @throws IOException if an I/O error occurs while handling the packet
      */
     void handle(Connection connection, P packet) throws IOException;
 }

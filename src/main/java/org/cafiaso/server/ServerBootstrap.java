@@ -9,6 +9,18 @@ import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Bootstrap class for the server.
+ * <p>
+ * This class is responsible for parsing command line arguments and starting the server.
+ * <p>
+ * The server can be started with the following command line arguments:
+ * <ul>
+ *     <li>{@code -h} or {@code --host} - the host to listen on</li>
+ *     <li>{@code -p} or {@code --port} - the port to listen on</li>
+ *     <li>{@code --help} - prints the help message</li>
+ * </ul>
+ */
 public class ServerBootstrap {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ServerBootstrap.class);
@@ -18,10 +30,20 @@ public class ServerBootstrap {
 
     private final Server server;
 
+    /**
+     * ServerBootstrap constructor.
+     *
+     * @param server the server instance
+     */
     public ServerBootstrap(Server server) {
         this.server = server;
     }
 
+    /**
+     * Starts the server with the given command line arguments.
+     *
+     * @param args the command line arguments
+     */
     public void run(String[] args) {
         Options options = new Options();
 

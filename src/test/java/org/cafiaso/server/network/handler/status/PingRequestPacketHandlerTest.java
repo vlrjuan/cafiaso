@@ -1,9 +1,10 @@
 package org.cafiaso.server.network.handler.status;
 
+import org.cafiaso.server.Server;
 import org.cafiaso.server.network.connection.Connection;
 import org.cafiaso.server.network.packet.client.status.PingRequestPacket;
-import org.cafiaso.server.network.packet.server.status.PingResponsePacket;
-import org.junit.jupiter.api.BeforeEach;
+import org.cafiaso.server.network.packet.server.status.PongResponsePacket;
+import org.cafiaso.server.network.server.NetworkServer;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -14,35 +15,32 @@ import static org.mockito.Mockito.*;
 
 class PingRequestPacketHandlerTest {
 
-    // Data
-    private static final long PAYLOAD = 123L;
-
-    // Handler
-    private static final PingRequestPacketHandler HANDLER = new PingRequestPacketHandler();
-
-    private Connection connection;
-
-    @BeforeEach
-    void setUp() {
-        connection = mock(Connection.class);
-    }
-
     @Test
-    void handle_ShouldSendPingResponsePacketAndCLoseConnection() throws IOException {
-        ArgumentCaptor<PingResponsePacket> captor = ArgumentCaptor.forClass(PingResponsePacket.class);
+    void handle_ShouldSendPingResponsePacketAndCloseConnection() throws IOException {
+        NetworkServer networkServer = mock(NetworkServer.class);
+
+        Server server = mock(Server.class);
+        when(server.getNetworkServer()).thenReturn(networkServer);
+
+        Connection connection = mock(Connection.class);
+        when(connection.getServer()).thenReturn(server);
+
+        long payload = 123L;
 
         PingRequestPacket packet = mock(PingRequestPacket.class);
-        when(packet.getPayload()).thenReturn(PAYLOAD);
+        when(packet.getPayload()).thenReturn(payload);
 
-        HANDLER.handle(connection, packet);
+        PingRequestPacketHandler handler = new PingRequestPacketHandler();
+        handler.handle(connection, packet);
 
-        verify(connection).sendPacket(captor.capture());
+        verify(networkServer).closeConnection(connection);
 
-        verify(connection).close();
+        ArgumentCaptor<PongResponsePacket> pongResponsePacketCaptor = ArgumentCaptor.forClass(PongResponsePacket.class);
 
-        PingResponsePacket capturedPacket = captor.getValue();
+        verify(connection).sendPacket(pongResponsePacketCaptor.capture());
+
+        PongResponsePacket capturedPacket = pongResponsePacketCaptor.getValue();
         assertNotNull(capturedPacket);
-
-        assertEquals(PAYLOAD, capturedPacket.payload());
+        assertEquals(payload, capturedPacket.getPayload());
     }
 }

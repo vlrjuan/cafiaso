@@ -9,6 +9,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 
+/**
+ * Handles the {@link StatusRequestPacket}.
+ */
 public class StatusRequestPacketHandler implements PacketHandler<StatusRequestPacket> {
 
     @Override
@@ -18,7 +21,7 @@ public class StatusRequestPacketHandler implements PacketHandler<StatusRequestPa
         JSONObject response = new JSONObject();
 
         JSONObject version = new JSONObject();
-        version.put("name", Server.VERSION_NAME);
+        version.put("name", Server.MINECRAFT_VERSION);
         version.put("protocol", Server.PROTOCOL_VERSION);
 
         response.put("version", version);

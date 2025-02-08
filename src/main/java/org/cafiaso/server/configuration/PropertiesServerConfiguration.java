@@ -5,29 +5,20 @@ import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * Implementation of {@link ServerConfiguration} that reads the configuration from a properties file.
+ * {@link ServerConfiguration} implementation that reads the configuration from a properties file.
  */
 public class PropertiesServerConfiguration implements ServerConfiguration {
 
-    /**
-     * The name of the configuration file.
-     */
     private static final String CONFIGURATION_FILE = "server.properties";
 
-    /**
-     * The properties loaded from the configuration file.
-     */
     private final Properties properties;
 
-    /**
-     * The class loader to use to load the configuration file.
-     */
     private final ClassLoader classLoader;
 
     /**
      * PropertiesServerConfiguration constructor.
      *
-     * @param classLoader the class loader to use to load the configuration file
+     * @param classLoader the class loader to use to load the configuration file (mainly for testing purposes)
      */
     public PropertiesServerConfiguration(ClassLoader classLoader) {
         this.properties = new Properties();

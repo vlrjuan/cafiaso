@@ -17,52 +17,48 @@ import static org.mockito.Mockito.*;
 
 class StatusRequestPacketHandlerTest {
 
-    // Data
-    private static final int MAXIMUM_PLAYERS = ServerConfiguration.DEFAULT_MAX_PLAYERS;
-    private static final int ONLINE_PLAYERS = 0;
-    private static final String DESCRIPTION = ServerConfiguration.DEFAULT_DESCRIPTION;
-
-    // Handler
-    private static final StatusRequestPacketHandler HANDLER = new StatusRequestPacketHandler();
-
     private Connection connection;
 
     @BeforeEach
     void setUp() {
         connection = mock(Connection.class);
-
-        Server server = mock(Server.class);
-        when(connection.getServer()).thenReturn(server);
-
-        ServerConfiguration configuration = mock(ServerConfiguration.class);
-        when(server.getConfiguration()).thenReturn(configuration);
-
-        when(configuration.getMaxPlayers()).thenReturn(MAXIMUM_PLAYERS);
-        when(configuration.getDescription()).thenReturn(DESCRIPTION);
-
-        PlayerManager playerManager = mock(PlayerManager.class);
-        when(server.getPlayerManager()).thenReturn(playerManager);
-
-        when(playerManager.getOnlinePlayers()).thenReturn(ONLINE_PLAYERS);
     }
 
     @Test
     void handle_ShouldSendStatusResponsePacket() throws IOException {
+        Server server = mock(Server.class);
+        when(connection.getServer()).thenReturn(server);
+
+        int maximumPlayers = ServerConfiguration.DEFAULT_MAX_PLAYERS;
+        int onlinePlayers = 10;
+        String description = ServerConfiguration.DEFAULT_DESCRIPTION;
+
+        ServerConfiguration configuration = mock(ServerConfiguration.class);
+        when(server.getConfiguration()).thenReturn(configuration);
+
+        when(configuration.getMaxPlayers()).thenReturn(maximumPlayers);
+        when(configuration.getDescription()).thenReturn(description);
+
+        PlayerManager playerManager = mock(PlayerManager.class);
+        when(server.getPlayerManager()).thenReturn(playerManager);
+
+        when(playerManager.getOnlinePlayers()).thenReturn(onlinePlayers);
+
         ArgumentCaptor<StatusResponsePacket> captor = ArgumentCaptor.forClass(StatusResponsePacket.class);
 
         StatusRequestPacket packet = mock(StatusRequestPacket.class);
 
-        HANDLER.handle(connection, packet);
+        StatusRequestPacketHandler handler = new StatusRequestPacketHandler();
+        handler.handle(connection, packet);
 
         verify(connection).sendPacket(captor.capture());
 
         StatusResponsePacket capturedPacket = captor.getValue();
-
         assertNotNull(capturedPacket);
 
         String expectedJsonResponse = "{\"players\":{\"max\":%d,\"online\":%d},\"description\":{\"text\":\"%s\"},\"version\":{\"protocol\":%d,\"name\":\"%s\"}}"
-                .formatted(MAXIMUM_PLAYERS, ONLINE_PLAYERS, DESCRIPTION, Server.PROTOCOL_VERSION, Server.VERSION_NAME);
+                .formatted(maximumPlayers, onlinePlayers, description, Server.PROTOCOL_VERSION, Server.MINECRAFT_VERSION);
 
-        assertEquals(expectedJsonResponse, capturedPacket.jsonResponse());
+        assertEquals(expectedJsonResponse, capturedPacket.getJsonResponse());
     }
 }

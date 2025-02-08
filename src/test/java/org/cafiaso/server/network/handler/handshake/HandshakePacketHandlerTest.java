@@ -4,10 +4,12 @@ import org.cafiaso.server.Server;
 import org.cafiaso.server.network.connection.Connection;
 import org.cafiaso.server.network.connection.ConnectionState;
 import org.cafiaso.server.network.packet.client.handshake.HandshakePacket;
+import org.cafiaso.server.network.server.NetworkServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.io.IOException;
+
 import static org.mockito.Mockito.*;
 
 class HandshakePacketHandlerTest {
@@ -15,29 +17,35 @@ class HandshakePacketHandlerTest {
     // Handler
     private static final HandshakePacketHandler HANDLER = new HandshakePacketHandler();
 
+    private NetworkServer networkServer;
     private Connection connection;
-    private HandshakePacket packet;
 
     @BeforeEach
     void setUp() {
-        connection = mock(Connection.class);
+        networkServer = mock(NetworkServer.class);
+        Server server = mock(Server.class);
 
-        packet = mock(HandshakePacket.class);
-        when(packet.getProtocolVersion()).thenReturn(Server.PROTOCOL_VERSION);
+        when(server.getNetworkServer()).thenReturn(networkServer);
+
+        connection = mock(Connection.class);
+        when(connection.getServer()).thenReturn(server);
     }
 
     @Test
-    void handle_ShouldDoNothing_WhenProtocolVersionIsIncorrect() {
+    void handle_ShouldCloseConnection_WhenClientVersionIsOutdated() throws IOException {
         HandshakePacket packet = mock(HandshakePacket.class);
         when(packet.getProtocolVersion()).thenReturn(0);
 
-        HANDLER.handle(connection, packet);
+        HandshakePacketHandler handler = new HandshakePacketHandler();
+        handler.handle(connection, packet);
 
-        verifyNoInteractions(connection);
+        verify(networkServer).closeConnection(connection);
     }
 
     @Test
-    void handle_ShouldSetStatusState_WhenIntentIsStatus() {
+    void handle_ShouldSetConnectionStateToStatus_WhenIntentIsStatus() throws IOException {
+        HandshakePacket packet = mock(HandshakePacket.class);
+        when(packet.getProtocolVersion()).thenReturn(Server.PROTOCOL_VERSION);
         when(packet.getNextState()).thenReturn(HandshakePacket.Intent.STATUS);
 
         HANDLER.handle(connection, packet);
@@ -46,7 +54,9 @@ class HandshakePacketHandlerTest {
     }
 
     @Test
-    void handle_ShouldSetLoginState_WhenIntentIsLogin() {
+    void handle_ShouldSetConnectionStateToLogin_WhenIntentIsLogin() throws IOException {
+        HandshakePacket packet = mock(HandshakePacket.class);
+        when(packet.getProtocolVersion()).thenReturn(Server.PROTOCOL_VERSION);
         when(packet.getNextState()).thenReturn(HandshakePacket.Intent.LOGIN);
 
         HANDLER.handle(connection, packet);
@@ -55,9 +65,13 @@ class HandshakePacketHandlerTest {
     }
 
     @Test
-    void handle_ShouldThrowException_WhenIntentIsTransfer() {
+    void handle_ShouldCloseConnection_WhenIntentIsTransfer() throws IOException {
+        HandshakePacket packet = mock(HandshakePacket.class);
+        when(packet.getProtocolVersion()).thenReturn(Server.PROTOCOL_VERSION);
         when(packet.getNextState()).thenReturn(HandshakePacket.Intent.TRANSFER);
 
-        assertThrowsExactly(UnsupportedOperationException.class, () -> HANDLER.handle(connection, packet), "Transfer is not supported");
+        HANDLER.handle(connection, packet);
+
+        verify(networkServer).closeConnection(connection);
     }
 }

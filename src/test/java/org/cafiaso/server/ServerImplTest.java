@@ -1,8 +1,10 @@
 package org.cafiaso.server;
 
 import org.cafiaso.server.configuration.ServerConfiguration;
+import org.cafiaso.server.mojang.MojangClient;
 import org.cafiaso.server.network.server.NetworkServer;
 import org.cafiaso.server.player.PlayerManager;
+import org.cafiaso.server.security.SecurityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -18,16 +20,19 @@ class ServerImplTest {
 
     private NetworkServer networkServer;
     private ServerConfiguration configuration;
+    private SecurityManager securityManager;
 
     private Server server;
 
     @BeforeEach
     void setUp() {
-        PlayerManager playerManager = mock(PlayerManager.class);
         networkServer = mock(NetworkServer.class);
         configuration = mock(ServerConfiguration.class);
+        securityManager = mock(SecurityManager.class);
+        PlayerManager playerManager = mock(PlayerManager.class);
+        MojangClient mojangClient = mock(MojangClient.class);
 
-        server = new ServerImpl(playerManager, networkServer, configuration);
+        server = new ServerImpl(configuration, networkServer, securityManager, playerManager, mojangClient);
     }
 
     @Test
@@ -35,6 +40,7 @@ class ServerImplTest {
         server.start(HOST, PORT);
 
         verify(configuration).load();
+        verify(securityManager).generateKeyPair();
         verify(networkServer).bind(HOST, PORT);
 
         assertTrue(server.isRunning());

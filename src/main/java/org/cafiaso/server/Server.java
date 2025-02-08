@@ -1,8 +1,10 @@
 package org.cafiaso.server;
 
 import org.cafiaso.server.configuration.ServerConfiguration;
+import org.cafiaso.server.mojang.MojangClient;
 import org.cafiaso.server.network.server.NetworkServer;
 import org.cafiaso.server.player.PlayerManager;
+import org.cafiaso.server.security.SecurityManager;
 
 /**
  * The main server class.
@@ -16,7 +18,7 @@ public interface Server {
     /**
      * The server version.
      */
-    String VERSION_NAME = "1.21.4";
+    String MINECRAFT_VERSION = "1.21.4";
 
     /**
      * The server protocol version.
@@ -55,9 +57,30 @@ public interface Server {
     ServerConfiguration getConfiguration();
 
     /**
+     * Gets the network server.
+     *
+     * @return the network server
+     */
+    NetworkServer getNetworkServer();
+
+    /**
+     * Gets the security manager.
+     *
+     * @return the security manager
+     */
+    SecurityManager getSecurityManager();
+
+    /**
      * Gets the player manager.
      *
      * @return the player manager
      */
     PlayerManager getPlayerManager();
+
+    /**
+     * Gets the mojang client.
+     *
+     * @return the mojang client
+     */
+    MojangClient getMojangClient();
 }

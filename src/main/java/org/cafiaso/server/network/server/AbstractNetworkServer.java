@@ -5,68 +5,77 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 /**
- * Abstract implementation of a {@link NetworkServer} that provides common functionality for network servers.
+ * Partial implementation of {@link NetworkServer} that provides common functionality for network servers
+ * such as managing active {@link Connection}s.
  */
 public abstract class AbstractNetworkServer implements NetworkServer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractNetworkServer.class);
 
-    /**
-     * The active connections as a map of addresses to connections.
-     * <p>
-     * This map is thread-safe.
-     */
-    private final Map<InetAddress, Connection> connections = Collections.synchronizedMap(new HashMap<>());
+    private final List<Connection> connections = Collections.synchronizedList(new ArrayList<>());
+
+    @Override
+    public void closeConnection(Connection connection) {
+        try {
+            connection.close();
+        } catch (IOException e) {
+            LOGGER.error("Failed to close connection {}", connection, e);
+        }
+
+        connections.remove(connection);
+    }
 
     @Override
     public void close() throws IOException {
         synchronized (connections) {
-            for (Connection connection : connections.values()) {
+            for (Connection connection : connections) {
                 try {
                     connection.close();
                 } catch (IOException e) {
                     LOGGER.error("Failed to close connection {}", connection, e);
                 }
             }
-
-            connections.clear();
         }
+
+        connections.clear();
     }
 
     /**
-     * Gets an immutable map of all active connections.
+     * Gets the list of all active connections.
      *
-     * @return an immutable map of all active connections
-     * where the key is the address and the value is the connection
+     * @return the list of all active connections
      */
-    public Map<InetAddress, Connection> getConnections() {
-        return Map.copyOf(connections);
+    public List<Connection> getConnections() {
+        return connections;
     }
 
     /**
-     * Accepts an incoming connection and starts reading packets from it, asynchronously.
+     * Accepts an incoming connection and starts reading packets, asynchronously.
+     *
+     * @param connection the connection to accept
      */
     protected void acceptConnection(Connection connection) {
         LOGGER.info("Incoming connection from {}", connection);
 
-        connections.put(connection.getAddress(), connection);
-
         Thread.startVirtualThread(() -> {
             while (connection.isOpen()) {
                 try {
-                    connection.readPacket();
+                    connection.readPackets();
                 } catch (Exception e) {
-                    LOGGER.error("Failed to read from connection {}", connection, e);
+                    LOGGER.error("Failed to read from connection {}. Closing connection", connection, e);
+
+                    closeConnection(connection);
 
                     break;
                 }
             }
         });
+
+        connections.add(connection);
     }
 }

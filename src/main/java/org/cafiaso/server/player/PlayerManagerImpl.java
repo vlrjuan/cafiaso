@@ -1,7 +1,7 @@
 package org.cafiaso.server.player;
 
 /**
- * Default implementation of the PlayerManager interface.
+ * Default {@link PlayerManager} implementation.
  */
 public class PlayerManagerImpl implements PlayerManager {
 

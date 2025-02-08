@@ -13,27 +13,16 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Implementation of a {@link NetworkServer} that uses sockets.
+ * {@link NetworkServer} implementation that uses sockets.
  */
 public class SocketNetworkServer extends AbstractNetworkServer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SocketNetworkServer.class);
 
-    /**
-     * The timeout for the socket connections in milliseconds.
-     * <p>
-     * If no data is received within this time, the connection will be closed.
-     */
     private static final int TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
 
-    /**
-     * The server instance.
-     */
     private final Server server;
 
-    /**
-     * The server socket channel.
-     */
     private ServerSocketChannel serverSocketChannel;
 
     /**
@@ -54,12 +43,12 @@ public class SocketNetworkServer extends AbstractNetworkServer {
 
         while (serverSocketChannel.isOpen()) {
             try {
+                // Accept a new incoming connection
                 SocketChannel clientSocketChannel = serverSocketChannel.accept();
-                closeConnectionIfExist(clientSocketChannel.socket().getInetAddress());
 
                 // Set socket options
                 Socket clientSocket = clientSocketChannel.socket();
-                clientSocket.setSoTimeout(TIMEOUT);
+                clientSocket.setSoTimeout(TIMEOUT); // If no data is received within this time, the connection will be closed
                 clientSocket.setTcpNoDelay(true);
 
                 SocketConnection connection = new SocketConnection(server, clientSocketChannel);
@@ -76,7 +65,7 @@ public class SocketNetworkServer extends AbstractNetworkServer {
     public void close() throws IOException {
         super.close();
 
-        if (serverSocketChannel != null && serverSocketChannel.isOpen()) {
+        if (serverSocketChannel != null) {
             serverSocketChannel.close();
         }
     }

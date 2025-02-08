@@ -1,40 +1,36 @@
 package org.cafiaso.server.network.packet.client.handshake;
 
-import org.cafiaso.server.network.DataType;
-import org.cafiaso.server.network.buffers.InputBuffer;
+import org.cafiaso.server.network.Serializer;
+import org.cafiaso.server.network.stream.input.ByteArrayInputStream;
+import org.cafiaso.server.network.stream.input.InputStream;
+import org.cafiaso.server.network.stream.output.ByteArrayOutputStream;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class LegacyServerListPingPacketTest {
 
-    // Data
-    private static final int PAYLOAD = 1;
-
-    // Data types
-    private static final DataType<Integer> VAR_INT_DATA_TYPE = DataType.VAR_INT;
-
     @Test
     void read_ShouldReadPacket() throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        DataOutputStream dataOut = new DataOutputStream(out);
+        int payload = 1;
 
-        VAR_INT_DATA_TYPE.write(dataOut, PAYLOAD);
+        byte[] data = serializeData(payload);
 
-        ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
-        DataInputStream dataIn = new DataInputStream(in);
-
-        try (InputBuffer buffer = new InputBuffer(dataIn)) {
+        try (InputStream in = new ByteArrayInputStream(data)) {
             LegacyServerListPingPacket packet = new LegacyServerListPingPacket();
-            packet.read(buffer);
+            packet.read(in);
 
-            assertEquals(PAYLOAD, packet.getPayload());
+            assertEquals(payload, packet.getPayload());
+        }
+    }
+
+    private byte[] serializeData(int payload) throws IOException {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            out.write(Serializer.VAR_INT, payload);
+
+            return out.toByteArray();
         }
     }
 }

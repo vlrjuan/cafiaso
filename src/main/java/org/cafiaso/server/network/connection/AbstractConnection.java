@@ -1,111 +1,148 @@
 package org.cafiaso.server.network.connection;
 
 import org.cafiaso.server.Server;
-import org.cafiaso.server.network.DataType;
-import org.cafiaso.server.network.buffers.InputBuffer;
-import org.cafiaso.server.network.buffers.OutputBuffer;
+import org.cafiaso.server.network.Serializer;
+import org.cafiaso.server.network.connection.exceptions.UnknownPacketException;
 import org.cafiaso.server.network.handler.PacketHandler;
 import org.cafiaso.server.network.packet.client.ClientPacket;
 import org.cafiaso.server.network.packet.server.ServerPacket;
-import org.cafiaso.server.utils.IntegerUtils;
+import org.cafiaso.server.network.stream.input.ByteArrayInputStream;
+import org.cafiaso.server.network.stream.input.InputStream;
+import org.cafiaso.server.network.stream.output.ByteArrayOutputStream;
+import org.cafiaso.server.utils.EncryptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.SecretKey;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Arrays;
 
 /**
- * Implementation of {@link Connection} that provides common functionality for connections
- * and uses a {@link InputBuffer} and {@link OutputBuffer} to read and write packets.
+ * Partial implementation of {@link Connection} that provides read and write methods for packets.
  */
 public abstract class AbstractConnection implements Connection {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractConnection.class);
 
-    /**
-     * The server instance.
-     */
     private final Server server;
 
-    /**
-     * The address of the connection.
-     */
     private final InetAddress address;
 
-    /**
-     * The buffer to read from.
-     */
-    protected final InputBuffer inputBuffer;
+    protected final DataInputStream in;
+    protected final DataOutputStream out;
 
-    /**
-     * The buffer to write to.
-     */
-    protected final OutputBuffer outputBuffer;
+    private ConnectionState state = ConnectionState.HANDSHAKE;
 
-    /**
-     * The current connection state.
-     */
-    private ConnectionState state;
+    private Identity identity;
+
+    private byte[] verifyToken;
+
+    private SecretKey sharedSecret;
 
     /**
      * AbstractConnection constructor.
      *
-     * @param server       the server instance
-     * @param address      the client address
-     * @param inputBuffer  the buffer to read from
-     * @param outputBuffer the buffer to write to
+     * @param server  the server instance
+     * @param address the client address
+     * @param in      the input stream to read from
+     * @param out     the output stream to write to
      */
-    public AbstractConnection(Server server, InetAddress address, InputBuffer inputBuffer, OutputBuffer outputBuffer) {
+    public AbstractConnection(Server server, InetAddress address, DataInputStream in, DataOutputStream out) {
         this.server = server;
         this.address = address;
-        this.inputBuffer = inputBuffer;
-        this.outputBuffer = outputBuffer;
-        this.state = ConnectionState.HANDSHAKE;
+        this.in = in;
+        this.out = out;
     }
 
     @Override
-    public boolean readPacket() throws IOException {
-        if (inputBuffer.isEmpty()) {
-            return false;
+    public void readPackets() throws IOException {
+        // Read a reasonable chunk of data for decryption
+        byte[] encryptedBuffer = new byte[1024];
+        int readBytes = this.in.read(encryptedBuffer);
+
+        if (readBytes <= 0) {
+            // No data was read from the input stream
+            return;
         }
 
-        int packetLength = inputBuffer.read(DataType.VAR_INT);
-        int packetId = packetLength == 0xFE ? 0xFE : inputBuffer.read(DataType.VAR_INT);
+        // Resize the buffer to match the actual read bytes
+        byte[] encryptedData = Arrays.copyOf(encryptedBuffer, readBytes);
 
-        ConnectionState.PacketEntry<ClientPacket> packetEntry = state.getPacketById(packetId);
+        // Decrypt the raw packet data if encryption is enabled
+        byte[] decryptedData = isEncryptionEnabled()
+                ? EncryptionUtils.decrypt(sharedSecret, encryptedData)
+                : encryptedData;
 
-        if (packetEntry == null) {
-            LOGGER.warn("Received unknown packet with id {} from {}", IntegerUtils.toHexString(packetId), this);
+        // Wrap the decrypted data in a ByteArrayInputStream for further parsing
+        try (InputStream in = new ByteArrayInputStream(decryptedData)) {
+            // Read all packets from the decrypted data until the input stream is empty
+            while (!in.isEmpty()) {
+                // Read the packet length
+                int packetLength = in.read(Serializer.VAR_INT);
 
-            return false;
+                // Read the packet ID (0xFE is a special case and stands for the LegacyServerListPing packet)
+                int packetId = packetLength == 0xFE ? 0xFE : in.read(Serializer.VAR_INT);
+
+                // Retrieve the packet entry for the packet ID
+                ConnectionState.PacketEntry<ClientPacket> packetEntry = state.getPacketById(packetId);
+
+                if (packetEntry == null) {
+                    throw new UnknownPacketException(packetId, state);
+                }
+
+                ClientPacket packet = packetEntry.packet();
+                PacketHandler<ClientPacket> handler = packetEntry.handler();
+
+                // Read the packet data
+                byte[] packetData = in.read(Serializer.BYTE_ARRAY(packetLength - 1));
+
+                try (InputStream packetIn = new ByteArrayInputStream(packetData)) {
+                    // Read the packet body
+                    packet.read(packetIn);
+                }
+
+                LOGGER.debug("Received packet {} from {}", packet, this);
+
+                // Handle the packet
+                handler.handle(this, packet);
+            }
         }
-
-        ClientPacket packet = packetEntry.packet();
-        PacketHandler<ClientPacket> packetHandler = packetEntry.handler();
-
-        // Read the packet data
-        packet.read(inputBuffer);
-
-        LOGGER.debug("Received packet {} from {}", packet, this);
-
-        // Handle the packet
-        packetHandler.handle(this, packet);
-
-        return true;
     }
 
     @Override
     public void sendPacket(ServerPacket packet) throws IOException {
-        outputBuffer.write(DataType.VAR_INT, packet.getLength());
-        outputBuffer.write(DataType.VAR_INT, packet.getId());
-        packet.write(outputBuffer);
+        try (ByteArrayOutputStream packetBuffer = new ByteArrayOutputStream(); // Buffer to determine the packet length
+             ByteArrayOutputStream out = new ByteArrayOutputStream()) { // Buffer to write the raw packet data
+            // Write the packet ID
+            packetBuffer.write(Serializer.VAR_INT, packet.getId());
 
-        LOGGER.debug("Sent packet {} to {}", packet, this);
-    }
+            // Write the packet body
+            packet.write(packetBuffer);
 
-    @Override
-    public void setState(ConnectionState state) {
-        this.state = state;
+            // Get the raw packet data (excluding the packet length)
+            byte[] packetBufferByteArray = packetBuffer.toByteArray();
+
+            // Write the packet length (ID + body) to the temporary buffer
+            out.write(Serializer.VAR_INT, packetBufferByteArray.length);
+
+            // Write the packet ID and body to the temporary buffer
+            out.write(Serializer.BYTE_ARRAY, packetBufferByteArray);
+
+            byte[] packetData = out.toByteArray();
+
+            // Encrypt the raw packet data if encryption is enabled
+            byte[] encryptedPacketData = isEncryptionEnabled()
+                    ? EncryptionUtils.encrypt(sharedSecret, packetData)
+                    : packetData;
+
+            // Write the encrypted packet data to the output stream
+            this.out.write(encryptedPacketData);
+
+            LOGGER.debug("Sent packet {} to {}", packet, this);
+        }
     }
 
     @Override
@@ -119,15 +156,48 @@ public abstract class AbstractConnection implements Connection {
     }
 
     @Override
-    public void close() throws IOException {
-        LOGGER.info("Closing connection {}", this);
+    public void setState(ConnectionState state) {
+        this.state = state;
+    }
 
-        inputBuffer.close();
-        outputBuffer.close();
+    @Override
+    public Identity getIdentity() {
+        return identity;
+    }
+
+    @Override
+    public void setIdentity(Identity identity) {
+        this.identity = identity;
+    }
+
+    @Override
+    public byte[] getVerifyToken() {
+        return verifyToken;
+    }
+
+    @Override
+    public void setVerifyToken(byte[] verifyToken) {
+        this.verifyToken = verifyToken;
+    }
+
+    @Override
+    public void setSharedSecret(SecretKey sharedSecret) {
+        this.sharedSecret = sharedSecret;
     }
 
     @Override
     public String toString() {
         return address.toString();
+    }
+
+    /**
+     * Checks whether encryption is enabled for this connection.
+     * <p>
+     * Encryption is enabled if a shared secret has been set (i.e. during the EncryptionResponse packet handling).
+     *
+     * @return {@code true} if encryption is enabled, {@code false} otherwise
+     */
+    private boolean isEncryptionEnabled() {
+        return sharedSecret != null;
     }
 }
