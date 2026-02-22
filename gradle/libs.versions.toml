@@ -1,0 +1,62 @@
+[versions]
+
+# Shadow
+shadow = "9.3.0"
+
+# Commons cli
+commons-cli = "1.11.0"
+
+# Guice
+guice = "7.0.0"
+
+# JavaPoet
+javapoet = "0.9.0"
+
+# JSON
+json = "20251224"
+
+# Reflections
+reflections = "0.10.2"
+
+# Slf4j
+slf4j = "2.0.17"
+
+# JUnit
+junit = "6.0.1"
+
+# Mockito
+mockito = "5.21.0"
+
+[libraries]
+
+# Commons cli
+commons-cli = { group = "commons-cli", name = "commons-cli", version.ref = "commons-cli" }
+
+# Guice
+guice = { group = "com.google.inject", name = "guice", version.ref = "guice" }
+guice-assistedinject = { group = "com.google.inject.extensions", name = "guice-assistedinject", version.ref = "guice" }
+
+# JavaPoet
+javapoet = { group = "com.palantir.javapoet", name = "javapoet", version.ref = "javapoet" }
+
+# JSON
+json = { group = "org.json", name = "json", version.ref = "json" }
+
+# Reflections
+reflections = { group = "org.reflections", name = "reflections", version.ref = "reflections" }
+
+# Slf4j
+slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
+slf4j-simple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
+
+# JUnit
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
+
+# Mockito
+mockito-core = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
+mockito-junit-jupiter = { group = "org.mockito", name = "mockito-junit-jupiter", version.ref = "mockito" }
+
+[plugins]
+
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
